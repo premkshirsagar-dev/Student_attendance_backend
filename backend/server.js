@@ -19,7 +19,22 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors());
+// app.use(cors());
+const allowedOrigins = [
+  "https://collegeattendancefrontend.vercel.app",
+  "http://localhost:5173", // keep this for local dev with Vite
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 // Routes
