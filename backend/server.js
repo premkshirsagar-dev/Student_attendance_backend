@@ -19,9 +19,13 @@ connectDB();
 
 // Middleware
 // app.use(cors());
+// const allowedOrigins = [
+//   "https://collegeattendancefrontend.vercel.app",
+//   "http://localhost:5173", // keep this for local dev with Vite
+// ];
 const allowedOrigins = [
-  "https://collegeattendancefrontend.vercel.app",
-  "http://localhost:5173", // keep this for local dev with Vite
+  "https://collegeattendanceprototype.vercel.app",   // ← to this (matches your real Vercel URL)
+  "http://localhost:5173",
 ];
 
 app.use(cors({
