@@ -7,8 +7,12 @@
 // DNS server configured. Setting real DNS servers explicitly avoids this.
 const dns = require("dns");
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
+<<<<<<< HEAD:server.js
 dns.setDefaultResultOrder("ipv4first");
 
+=======
+require("dns").setDefaultResultOrder("ipv4first");
+>>>>>>> 4b8c4a301c1d113e5aba0468d7ca13e077135bf2:backend/server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -25,6 +29,7 @@ const app = express();
 connectDB();
 
 // Middleware
+<<<<<<< HEAD:server.js
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174", // add this
@@ -44,6 +49,28 @@ app.use(
     credentials: true,
   })
 );
+=======
+// app.use(cors());
+// const allowedOrigins = [
+//   "https://collegeattendancefrontend.vercel.app",
+//   "http://localhost:5173", // keep this for local dev with Vite
+// ];
+const allowedOrigins = [
+  "https://collegeattendanceprototype.vercel.app",   // ← to this (matches your real Vercel URL)
+  "http://localhost:5173",
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
+>>>>>>> 4b8c4a301c1d113e5aba0468d7ca13e077135bf2:backend/server.js
 app.use(express.json());
 
 // Routes
