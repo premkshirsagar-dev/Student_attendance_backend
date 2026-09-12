@@ -41,6 +41,7 @@ const allowedOrigins = [
   "https://college-attendance-admin.vercel.app",
 ];
 
+
 app.use(
   cors({
     origin: function (origin, callback) {
