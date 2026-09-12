@@ -1,9 +1,14 @@
 // server.js
 // Entry point: sets up Express, connects to MongoDB, mounts routes.
+
+// Node's automatic DNS server detection can incorrectly resolve to 127.0.0.1
+// on some Windows machines (often triggered by disconnected virtual adapters,
+// e.g. VPN TAP adapters) even though the active network adapter has a valid
+// DNS server configured. Setting real DNS servers explicitly avoids this.
 const dns = require("dns");
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 dns.setDefaultResultOrder("ipv4first");
-require("dns").setDefaultResultOrder("ipv4first");
+
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -12,6 +17,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const teacherRoutes = require("./routes/teacherRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -19,13 +25,32 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174", // add this
+  "https://collegeattendanceprototype.vercel.app",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (e.g. mobile apps, curl, Postman)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/teacher", teacherRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Health check
 app.get("/", (req, res) => {
@@ -44,6 +69,6 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT,"0.0.0.0", () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
