@@ -29,10 +29,16 @@ connectDB();
 
 // Middleware
 
+// const allowedOrigins = [
+//   "http://localhost:5173",
+//   "http://localhost:5174", // add this
+//   "https://collegeattendanceprototype.vercel.app",
+// ];
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://localhost:5174", // add this
+  "http://localhost:5174",
   "https://collegeattendanceprototype.vercel.app",
+  "https://college-attendance-admin.vercel.app",
 ];
 
 app.use(
