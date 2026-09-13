@@ -133,10 +133,84 @@ const getAttendanceRecords = async (req, res) => {
     return res.status(500).json({ message: "Server error.", error: error.message });
   }
 };
+// GET /api/teacher/attendance/rankings?class=BCA+3rd+Year&month=2026-09
+// GET /api/teacher/attendance/rankings?class=BCA+3rd+Year&year=2026
+// Returns every student in the class ranked by attendance percentage
+// (highest first) over the given month or year. Uses MongoDB aggregation
+// so the grouping/math happens in the database, not in JS after fetching
+// every row.
+const getAttendanceRankings = async (req, res) => {
+  try {
+    const { class: className, month, year } = req.query;
+
+    if (!className) {
+      return res.status(400).json({ message: "Class is required." });
+    }
+    if (!month && !year) {
+      return res.status(400).json({ message: "Provide either a month (YYYY-MM) or a year (YYYY)." });
+    }
+
+    let startDate, endDate;
+    if (month) {
+      startDate = `${month}-01`;
+      endDate = `${month}-31`;
+    } else {
+      startDate = `${year}-01-01`;
+      endDate = `${year}-12-31`;
+    }
+
+    const rankings = await Attendance.aggregate([
+      {
+        $match: {
+          class: className,
+          date: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: "$studentId",
+          total: { $sum: 1 },
+          present: {
+            $sum: { $cond: [{ $eq: ["$status", "Present"] }, 1, 0] },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "students",
+          localField: "_id",
+          foreignField: "_id",
+          as: "student",
+        },
+      },
+      { $unwind: "$student" },
+      {
+        $project: {
+          _id: 0,
+          studentId: "$_id",
+          name: "$student.name",
+          enrollmentNumber: "$student.enrollmentNumber",
+          total: 1,
+          present: 1,
+          absent: { $subtract: ["$total", "$present"] },
+          percentage: {
+            $round: [{ $multiply: [{ $divide: ["$present", "$total"] }, 100] }, 2],
+          },
+        },
+      },
+      { $sort: { percentage: -1, name: 1 } },
+    ]);
+
+    return res.status(200).json(rankings);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error.", error: error.message });
+  }
+};
 
 module.exports = {
   getClassForAttendance,
   submitAttendance,
   updateAttendance,
   getAttendanceRecords,
+  getAttendanceRankings,
 };
