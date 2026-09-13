@@ -18,6 +18,7 @@ const {
   submitAttendance,
   updateAttendance,
   getAttendanceRecords,
+  getAttendanceRankings,
 } = require("../controllers/attendanceController");
 
 router.use(protect, authorize("teacher"));
@@ -34,6 +35,7 @@ router.delete("/students/:id", deleteStudent);
 
 // Attendance
 router.get("/attendance/class-students", getClassForAttendance);
+router.get("/attendance/rankings", getAttendanceRankings);
 router.post("/attendance", submitAttendance);
 router.put("/attendance/:id", updateAttendance);
 router.get("/attendance", getAttendanceRecords);
