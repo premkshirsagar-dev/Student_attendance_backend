@@ -1,7 +1,8 @@
 // controllers/authController.js
-// Handles registration and login for Students and Admins.
-// NOTE: Teachers no longer self-register — only an Admin can create a
-// Teacher account (see controllers/adminController.js).
+// Handles LOGIN ONLY for Students and Teachers, plus register+login for Admin.
+// NOTE: There is no public Student or Teacher self-registration — both
+// account types are created exclusively by an authenticated Admin
+// (see controllers/adminController.js).
 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -16,49 +17,6 @@ const generateToken = (user, role) => {
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
-};
-
-// ---------- STUDENT REGISTER ----------
-const registerStudent = async (req, res) => {
-  try {
-    const { name, email, password, enrollmentNumber, class: studentClass } = req.body;
-
-    if (!name || !email || !password || !enrollmentNumber || !studentClass) {
-      return res.status(400).json({ message: "All fields are required." });
-    }
-    if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters." });
-    }
-
-    const existingByEmail = await Student.findOne({ email: email.toLowerCase() });
-    const existingByEnrollment = await Student.findOne({
-      enrollmentNumber: enrollmentNumber.toUpperCase(),
-    });
-
-    if (existingByEmail || existingByEnrollment) {
-      return res.status(409).json({ message: "Student already registered. Please login." });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const student = await Student.create({
-      name,
-      email,
-      password: hashedPassword,
-      enrollmentNumber,
-      class: studentClass,
-    });
-
-    return res.status(201).json({
-      message: "Registration successful. Please login.",
-      student,
-    });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(409).json({ message: "Student already registered. Please login." });
-    }
-    return res.status(500).json({ message: "Server error during registration.", error: error.message });
-  }
 };
 
 // ---------- ADMIN REGISTER ----------
@@ -186,7 +144,6 @@ const loginAdmin = async (req, res) => {
 };
 
 module.exports = {
-  registerStudent,
   registerAdmin,
   loginStudent,
   loginTeacher,
