@@ -113,30 +113,35 @@ const deleteTeacher = async (req, res) => {
 };
 
 // GET /api/admin/students?search=&class=
-async function getStudents(req, res) {
+async function createStudent(req, res) {
   try {
-    const { search, class: classFilter } = req.query;
-    const query = {};
+    const { name, studentId, class: studentClass, fatherName, motherName } = req.body;
 
-    if (classFilter && classFilter !== "All Classes") {
-      query.class = classFilter;
+    if (!name || !studentId || !studentClass) {
+      return res.status(400).json({ message: "Name, Student ID, and Class are required." });
     }
 
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { enrollmentNumber: { $regex: search, $options: "i" } },
-      ];
+    const existing = await Student.findOne({ studentId: studentId.trim().toUpperCase() });
+    if (existing) {
+      return res.status(409).json({ message: "A student with this Student ID already exists." });
     }
 
-    const students = await Student.find(query).sort({ name: 1 });
-    return res.status(200).json(students);
+    const student = await Student.create({
+      name,
+      studentId,
+      class: studentClass,
+      fatherName,
+      motherName,
+    });
+
+    return res.status(201).json({ message: "Student added successfully.", student });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ message: "A student with this Student ID already exists." });
+    }
     return res.status(500).json({ message: "Server error.", error: error.message });
   }
 }
-
 // GET /api/admin/students/:id
 async function getStudentById(req, res) {
   try {
@@ -187,7 +192,7 @@ async function createStudent(req, res) {
 // PUT /api/admin/students/:id
 async function updateStudent(req, res) {
   try {
-    const { name, email, enrollmentNumber, class: studentClass } = req.body;
+    const { name, studentId, class: studentClass, fatherName, motherName } = req.body;
 
     const student = await Student.findById(req.params.id);
     if (!student) {
@@ -195,15 +200,16 @@ async function updateStudent(req, res) {
     }
 
     if (name) student.name = name;
-    if (email) student.email = email;
-    if (enrollmentNumber) student.enrollmentNumber = enrollmentNumber;
+    if (studentId) student.studentId = studentId;
     if (studentClass) student.class = studentClass;
+    if (fatherName !== undefined) student.fatherName = fatherName;
+    if (motherName !== undefined) student.motherName = motherName;
 
     await student.save();
     return res.status(200).json({ message: "Student updated successfully.", student });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(409).json({ message: "Email or enrollment number already in use." });
+      return res.status(409).json({ message: "A student with this Student ID already exists." });
     }
     return res.status(500).json({ message: "Server error.", error: error.message });
   }
