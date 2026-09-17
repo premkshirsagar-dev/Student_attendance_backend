@@ -19,7 +19,6 @@ const getStudents = async (req, res) => {
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
         { enrollmentNumber: { $regex: search, $options: "i" } },
       ];
     }
