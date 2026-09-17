@@ -1,33 +1,27 @@
 // models/Student.js
-// Mongoose schema for a Student user
-
 const mongoose = require("mongoose");
 
 const studentSchema = new mongoose.Schema(
   {
+    studentId: {
+      type: String,
+      required: [true, "Student ID is required"],
+      unique: true,
+      trim: true,
+      uppercase: true,
+    },
     name: {
       type: String,
       required: [true, "Name is required"],
       trim: true,
     },
-    email: {
+    fatherName: {
       type: String,
-      required: [true, "Email is required"],
-      unique: true,
-      lowercase: true,
       trim: true,
     },
-    password: {
+    motherName: {
       type: String,
-      required: [true, "Password is required"],
-      minlength: 6,
-    },
-    enrollmentNumber: {
-      type: String,
-      required: [true, "Enrollment number is required"],
-      unique: true,
       trim: true,
-      uppercase: true,
     },
     class: {
       type: String,
@@ -37,17 +31,10 @@ const studentSchema = new mongoose.Schema(
     role: {
       type: String,
       default: "student",
-      immutable: true, // role can never be changed once set
+      immutable: true,
     },
   },
-  { timestamps: true } // adds createdAt and updatedAt automatically
+  { timestamps: true }
 );
-
-// Never send the password back in API responses
-studentSchema.methods.toJSON = function () {
-  const obj = this.toObject();
-  delete obj.password;
-  return obj;
-};
 
 module.exports = mongoose.model("Student", studentSchema);
