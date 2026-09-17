@@ -13,7 +13,7 @@ const Admin = require("../models/Admin");
 // Helper: sign a JWT containing the fields the middleware expects
 const generateToken = (user, role) => {
   return jwt.sign(
-    { userId: user._id, email: user.email, role },
+    { userId: user._id, email: user.email || user.studentId, role },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
