@@ -113,6 +113,45 @@ const deleteTeacher = async (req, res) => {
 };
 
 // GET /api/admin/students?search=&class=
+async function getStudents(req, res) {
+  try {
+    const { search, class: classFilter } = req.query;
+    const query = {};
+
+    if (classFilter && classFilter !== "All Classes") {
+      query.class = classFilter;
+    }
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { studentId: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const students = await Student.find(query).sort({ name: 1 });
+    return res.status(200).json(students);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error.", error: error.message });
+  }
+}
+
+// GET /api/admin/students/:id
+async function getStudentById(req, res) {
+  try {
+    const student = await Student.findById(req.params.id);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found." });
+    }
+    return res.status(200).json(student);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error.", error: error.message });
+  }
+}
+
+// POST /api/admin/students  (Admin adds a new student)
+// Only studentId is required to be unique — name, class, and parent
+// names can repeat freely across students.
 async function createStudent(req, res) {
   try {
     const { name, studentId, class: studentClass, fatherName, motherName } = req.body;
@@ -142,54 +181,8 @@ async function createStudent(req, res) {
     return res.status(500).json({ message: "Server error.", error: error.message });
   }
 }
-// GET /api/admin/students/:id
-async function getStudentById(req, res) {
-  try {
-    const student = await Student.findById(req.params.id);
-    if (!student) {
-      return res.status(404).json({ message: "Student not found." });
-    }
-    return res.status(200).json(student);
-  } catch (error) {
-    return res.status(500).json({ message: "Server error.", error: error.message });
-  }
-}
 
-// POST /api/admin/students  (Admin adds a new student)
-async function createStudent(req, res) {
-  try {
-    const { name, email, password, enrollmentNumber, class: studentClass } = req.body;
-
-    if (!name || !email || !password || !enrollmentNumber || !studentClass) {
-      return res.status(400).json({ message: "All fields are required." });
-    }
-
-    const existing = await Student.findOne({
-      $or: [{ email: email.toLowerCase() }, { enrollmentNumber: enrollmentNumber.toUpperCase() }],
-    });
-    if (existing) {
-      return res.status(409).json({ message: "Student already registered." });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const student = await Student.create({
-      name,
-      email,
-      password: hashedPassword,
-      enrollmentNumber,
-      class: studentClass,
-    });
-
-    return res.status(201).json({ message: "Student added successfully.", student });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(409).json({ message: "Student already registered." });
-    }
-    return res.status(500).json({ message: "Server error.", error: error.message });
-  }
-}
-
-// PUT /api/admin/students/:id
+// PUT /api/admin/students/:id  (name, studentId, class, parent names)
 async function updateStudent(req, res) {
   try {
     const { name, studentId, class: studentClass, fatherName, motherName } = req.body;
