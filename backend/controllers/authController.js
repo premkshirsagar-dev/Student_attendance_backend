@@ -59,19 +59,14 @@ const registerAdmin = async (req, res) => {
 // ---------- STUDENT LOGIN ----------
 const loginStudent = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required." });
+    const { studentId } = req.body;
+    if (!studentId) {
+      return res.status(400).json({ message: "Student ID is required." });
     }
 
-    const student = await Student.findOne({ email: email.toLowerCase() });
+    const student = await Student.findOne({ studentId: studentId.trim().toUpperCase() });
     if (!student) {
-      return res.status(401).json({ message: "Invalid email or password." });
-    }
-
-    const isMatch = await bcrypt.compare(password, student.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password." });
+      return res.status(401).json({ message: "Invalid Student ID." });
     }
 
     const token = generateToken(student, "student");
