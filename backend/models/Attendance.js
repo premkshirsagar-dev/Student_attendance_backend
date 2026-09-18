@@ -1,6 +1,9 @@
 // models/Attendance.js
 // Mongoose schema for an Attendance record.
 // One record = one student's status for one class on one date.
+// A day can have up to two check-ins — Noon and Afternoon — but only
+// ONE record is ever stored per student/class/date: Afternoon overwrites
+// Noon if both are taken (the "session" field shows which one it reflects).
 
 const mongoose = require("mongoose");
 
@@ -26,6 +29,15 @@ const attendanceSchema = new mongoose.Schema(
       type: String,
       enum: ["Present", "Absent"],
       required: true,
+    },
+    session: {
+      // Which check-in this record currently reflects. A student's
+      // stored record always shows the LATEST session taken for that
+      // class/date — Afternoon overwrites Noon if both are taken.
+      type: String,
+      enum: ["Noon", "Afternoon"],
+      required: true,
+      default: "Noon",
     },
     markedBy: {
       type: mongoose.Schema.Types.ObjectId,
