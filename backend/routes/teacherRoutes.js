@@ -1,6 +1,5 @@
 // routes/teacherRoutes.js
-// Teacher is VIEW-ONLY on students. Add/edit/delete student routes
-// have been removed — that's Admin-only now (see adminRoutes.js).
+// Every route here requires a valid JWT AND role === "teacher"
 const express = require("express");
 const router = express.Router();
 const { protect, authorize } = require("../middleware/authMiddleware");
@@ -17,6 +16,7 @@ const {
   updateAttendance,
   getAttendanceRecords,
   getAttendanceRankings,
+  getMidwayLeavers,
 } = require("../controllers/attendanceController");
 
 router.use(protect, authorize("teacher"));
@@ -24,13 +24,15 @@ router.use(protect, authorize("teacher"));
 // Dashboard
 router.get("/dashboard", getDashboardStats);
 
-// Students — VIEW ONLY
+// Student viewing ONLY — Teacher can no longer add/edit/delete students.
+// Full Student CRUD now lives under /api/admin/students.
 router.get("/students", getStudents);
 router.get("/students/:id", getStudentById);
 
 // Attendance
 router.get("/attendance/class-students", getClassForAttendance);
 router.get("/attendance/rankings", getAttendanceRankings);
+router.get("/attendance/midway-leavers", getMidwayLeavers);
 router.post("/attendance", submitAttendance);
 router.put("/attendance/:id", updateAttendance);
 router.get("/attendance", getAttendanceRecords);
