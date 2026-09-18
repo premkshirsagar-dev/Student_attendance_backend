@@ -1,7 +1,9 @@
 // routes/adminRoutes.js
 // Every route here requires a valid JWT AND role === "admin"
 // Admin has: full Teacher CRUD, full Student CRUD, full Admin CRUD,
-// AND the same attendance capabilities Teacher has.
+// AND the same attendance capabilities Teacher has (take attendance,
+// view records, view rankings) — reusing the same controller functions
+// Teacher's routes use, so behavior stays identical and in one place.
 const express = require("express");
 const router = express.Router();
 const { protect, authorize } = require("../middleware/authMiddleware");
@@ -29,6 +31,7 @@ const {
   updateAttendance,
   getAttendanceRecords,
   getAttendanceRankings,
+  getMidwayLeavers,
 } = require("../controllers/attendanceController");
 
 router.use(protect, authorize("admin"));
@@ -47,7 +50,7 @@ router.post("/admins", createAdmin);
 router.put("/admins/:id", updateAdmin);
 router.delete("/admins/:id", deleteAdmin);
 
-// Student management — full CRUD
+// Student management — full CRUD (Admin-only now; Teacher is view-only)
 router.get("/students", getStudents);
 router.get("/students/:id", getStudentById);
 router.post("/students", createStudent);
@@ -57,6 +60,7 @@ router.delete("/students/:id", deleteStudent);
 // Attendance — same capabilities as Teacher
 router.get("/attendance/class-students", getClassForAttendance);
 router.get("/attendance/rankings", getAttendanceRankings);
+router.get("/attendance/midway-leavers", getMidwayLeavers);
 router.post("/attendance", submitAttendance);
 router.put("/attendance/:id", updateAttendance);
 router.get("/attendance", getAttendanceRecords);
